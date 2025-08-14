@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Apresentação — Notificador de Pausas</title>
+<link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+<style>
+  :root{
+    --primary: #0693e3;
+    --primary-dark: #0477b6;
+    --bg: #f5f5f5;
+    --card: #ffffff;
+    --muted: #6b7280;
+    --text: #111827;
+    --accent: #2563eb;
+    --radius: 10px;
+    --maxw: 1100px;
+  }
+  * { box-sizing: border-box; }
+  html,body { height: 100%; }
+  body{
+    margin:0;
+    font-family: "Inter", "Open Sans", Arial, sans-serif;
+    background: linear-gradient(180deg, #ffffff 0%, #f5f7fa 100%);
+    color: var(--text);
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    padding: 32px;
+    display: flex;
+    justify-content: center;
+  }
+  .wrap{ width: 100%; max-width: var(--maxw); }
+  header.app-header{
+    background: linear-gradient(90deg,var(--primary), #6ea9f8);
+    color: white;
+    padding: 28px;
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(6,147,227,0.12);
+    margin-bottom: 22px;
+  }
+  header .title{ font-size: 28px; font-weight:700; margin:0; }
+  header .subtitle{ margin:6px 0 0; opacity:0.95; }
+  main.content{
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 20px;
+    align-items: start;
+  }
+  .panel{
+    background: var(--card);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 6px 18px rgba(15,23,42,0.06);
+    margin-bottom: 20px;
+  }
+  h2.section-title{ font-size:20px; margin:0 0 12px; color:var(--primary); }
+  p.lead{ color:var(--muted); margin:0 0 14px; line-height:1.5; }
+  .grid-3{
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+    gap:12px;
+  }
+  .card{
+    background: linear-gradient(180deg,#fff,#fbfdff);
+    border-radius:10px;
+    padding:14px;
+    border:1px solid rgba(13,58,110,0.04);
+  }
+  .card h4{ margin:0 0 6px; font-size:15px; color:var(--primary-dark); }
+  .card p{ margin:0; color:var(--muted); font-size:14px; }
+  pre.code{
+    background:#0b1220;
+    color:#cfe8ff;
+    padding:12px;
+    border-radius:8px;
+    overflow:auto;
+    font-size:13px;
+    line-height:1.45;
+  }
+  aside.sidebar{
+    position: sticky;
+    top: 32px;
+    align-self: start;
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+  }
+  .box{
+    background: var(--card);
+    padding:16px;
+    border-radius:12px;
+    box-shadow:0 6px 18px rgba(12,20,40,0.04);
+  }
+  label.small{ font-size:13px; color:var(--muted); display:block; margin-bottom:6px; }
+  input[type="time"], input[type="number"], select, button, input[type="text"]{
+    width:100%;
+    padding:10px 12px;
+    border-radius:8px;
+    border:1px solid #e6e9ee;
+    outline:none;
+    font-size:14px;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.6);
+  }
+  input[type="checkbox"]{ transform:scale(1.05); margin-right:8px; }
+  .btn-primary{
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding:10px 14px;
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:600;
+    box-shadow: 0 6px 18px rgba(6,147,227,0.12);
+  }
+  .btn-ghost{
+    background: transparent;
+    border:1px solid #e6e9ee;
+    padding:10px 12px;
+    border-radius:8px;
+    cursor:pointer;
+  }
+  .muted{ color:var(--muted); font-size:13px; }
+  .mock-notif{
+    position: fixed;
+    right: 22px;
+    bottom: 22px;
+    width: 360px;
+    background: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(13,23,43,0.15);
+    display:flex;
+    gap:12px;
+    padding:12px;
+    align-items:flex-start;
+    z-index: 9999;
+    transform: translateY(16px);
+    opacity: 0;
+    transition: transform .28s cubic-bezier(.2,.9,.3,1), opacity .28s;
+    border-left: 6px solid var(--accent);
+    cursor:pointer;
+  }
+  .mock-notif.show{ transform: translateY(0); opacity: 1; }
+  .mock-notif .icon{ width:44px; height:44px; border-radius:6px; overflow:hidden; flex:0 0 44px; background:#f2f6fb; display:flex; align-items:center; justify-content:center; }
+  .mock-notif img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .mock-notif .body{ flex:1; min-width:0; }
+  .mock-notif .title{ color:var(--primary); font-weight:700; margin:0 0 4px; font-size:15px; }
+  .mock-notif .msg{ color:#374151; font-size:13px; margin:0 0 8px; line-height:1.25; }
+  .mock-notif .actions{ display:flex; gap:8px; }
+  .mock-notif .actions button{
+    background:transparent; border:1px solid #e6e9ee; padding:6px 10px; border-radius:8px; font-size:13px; cursor:pointer;
+  }
+  @media (max-width:980px){
+    main.content{ grid-template-columns: 1fr; padding-bottom: 40px; }
+    aside.sidebar{ position: static; top:auto; }
+    .mock-notif{ right: 12px; left:12px; width:auto; }
+  }
+  .note{ font-size:13px; color:var(--muted); margin-top:10px; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="app-header">
+      <div class="title">Notificador de Pausas — Apresentação</div>
+      <div class="subtitle">Demonstração, arquitetura e integração (simulação local da notificação do Chrome/Windows)</div>
+    </header>
+
+    <main class="content" aria-live="polite">
+      <section>
+        <article class="panel" aria-labelledby="overview-title">
+          <h2 id="overview-title" class="section-title">Visão Geral</h2>
+          <p class="lead">
+            O <strong>Notificador de Pausas</strong> é uma extensão para o ambiente de atendimento que identifica automaticamente os horários de pausa do Genesys e avisa o agente 1 minuto antes do início da pausa, reduzindo esquecimento e supervisão constante.  
+            A extensão foi recentemente publicada na <a href="https://chromewebstore.google.com/detail/lipicambanollcogkabafimonhgbfien?utm_source=item-share-cb" target="_blank">Chrome Web Store</a>, facilitando a instalação.
+          </p>
+        </article>
+
+        <article class="panel" aria-labelledby="problem-title">
+          <h2 id="problem-title" class="section-title">O Problema (detalhado)</h2>
+          <p class="lead">
+            Pausas em contact center são definidas dinamicamente. Sem um lembrete eficaz:
+          </p>
+          <div class="grid-3" role="list">
+            <div class="card" role="listitem">
+              <h4>Esquecimento / Atraso</h4>
+              <p>Agentes atrasam ou esquecem pausas, impactando atendimento e métricas.</p>
+            </div>
+            <div class="card" role="listitem">
+              <h4>Intervenção de Supervisão</h4>
+              <p>Supervisores precisam relembrar manualmente, reduzindo foco estratégico.</p>
+            </div>
+            <div class="card" role="listitem">
+              <h4>Métricas e Conformidade</h4>
+              <p>Erros de controle de pausa impactam produtividade, relatórios e aderência a políticas internas.</p>
+            </div>
+          </div>
+          <p style="margin-top:12px;" class="muted">
+            Observação: não substitui políticas de RH — apenas reduz erros operacionais e aumenta previsibilidade.
+          </p>
+        </article>
+
+        <article class="panel" aria-labelledby="targets-title">
+          <h2 id="targets-title" class="section-title">Objetivos</h2>
+          <ul>
+            <li class="muted">Alertar visualmente 1 minuto antes de cada pausa.</li>
+            <li class="muted">Permitir personalização simples (tempo, som, interação).</li>
+            <li class="muted">Registrar alertas para auditoria.</li>
+            <li class="muted">Facilitar expansão para outras equipes via publicação oficial.</li>
+          </ul>
+        </article>
+
+        <article class="panel" aria-labelledby="flow-title">
+          <h2 id="flow-title" class="section-title">Fluxo de Funcionamento (arquitetura)</h2>
+          <p class="muted">Resumo em três passos:</p>
+          <ol class="muted">
+            <li><strong>content.js</strong> — lê aba "Atividade" do Genesys.</li>
+            <li><strong>Mensageria</strong> — envia dados ao background.js.</li>
+            <li><strong>background.js</strong> — agenda alertas e cria notificações via chrome.notifications.create.</li>
+          </ol>
+        </article>
+
+        <article class="panel" aria-labelledby="benefits-title">
+          <h2 id="benefits-title" class="section-title">Resultados Esperados e Próximos Passos</h2>
+          <ul>
+            <li class="muted">Redução de atrasos e erros em X%.</li>
+            <li class="muted">Menor necessidade de intervenção de supervisores.</li>
+            <li class="muted">Escalonamento: som, histórico e configuração por perfil.</li>
+          </ul>
+          <p class="muted" style="margin-top:10px;">
+            Próximo passo: piloto em 1 equipe, coleta de métricas por 2 semanas, ajustes de UX e expansão via Chrome Web Store.
+          </p>
+        </article>
+      </section>
+
+      <aside class="sidebar" aria-label="Demonstração">
+        <div class="box" aria-labelledby="demo-title">
+          <h3 id="demo-title" style="margin:0 0 8px;">Demonstração</h3>
+          <p class="muted" style="margin:0 0 12px;">Teste rápido da notificação (simulação local estilo Windows/Chrome).</p>
+          <button class="btn-primary" id="btn-now">Simular agora</button>
+          <div style="height:10px;"></div>
+
+          <hr style="border:none;border-top:1px solid #eef2f6;margin:12px 0;">
+
+          <label class="small">Agendar pausa (horário local)</label>
+          <input type="time" id="pause-time" step="60" value="">
+          <label class="small" style="margin-top:8px;">Duração (min)</label>
+          <input type="number" id="pause-duration" min="1" value="10">
+
+          <div style="display:flex;gap:8px;margin-top:10px;">
+            <button class="btn-primary" id="btn-schedule">Agendar (1 min antes)</button>
+            <button class="btn-ghost" id="btn-fast">Demo rápido</button>
+          </div>
+
+          <p class="note">"Demo rápido" dispara notificação em 3s para apresentação.</p>
+        </div>
+      </aside>
+    </main>
+
+    <footer style="max-width:var(--maxw); margin:20px auto 0; text-align:center; color:var(--muted); font-size:13px;">
+      Desenvolvido para apresentação interna — coloque <code>icon.png</code> na mesma pasta para visual completo.
+    </footer>
+  </div>
+
+  <div id="mockContainer" aria-hidden="true"></div>
+
+<script>
+function showMockNotification(data={}, options={}) {
+  const container = document.getElementById('mockContainer');
+  const prev = container.querySelector('.mock-notif');
+  if(prev) prev.remove();
+
+  const n = document.createElement('div');
+  n.className='mock-notif';
+  n.setAttribute('role','dialog');
+  n.setAttribute('aria-live','assertive');
+  n.innerHTML = `
+    <div class="icon"><img src="icon.png" alt="Ícone"></div>
+    <div class="body">
+      <div class="title">${escapeHtml(data.title||'Pausa')}</div>
+      <div class="msg">${escapeHtml(data.message||'Hora da pausa! Duração: '+(data.durationMin??'')+'min')}</div>
+      <div class="actions">
+        <button data-action="close">Fechar</button>
+      </div>
+    </div>
+  `;
+
+  n.addEventListener('click', (e)=>{
+    if(e.target.closest('[data-action="close"]')) return;
+    window.open('https://apps.sae1.pure.cloud/directory/#/activity','_blank');
+    closeNotif(n);
+  });
+
+  n.querySelector('[data-action="close"]').addEventListener('click',(e)=>{
+    e.stopPropagation();
+    closeNotif(n);
+  });
+
+  container.appendChild(n);
+  requestAnimationFrame(()=>n.classList.add('show'));
+
+  if(!options.requireInteraction) setTimeout(()=>closeNotif(n),5000);
+}
+
+function closeNotif(node){ if(!node) return; node.classList.remove('show'); setTimeout(()=>node.remove(),320); }
+function escapeHtml(str){ if(!str) return ''; return String(str).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]); }
+
+document.getElementById('btn-now').addEventListener('click',()=>{
+  showMockNotification({id:'teste-now',title:'Pausa 10',message:'Hora da Pausa 10! Duração: 10min',durationMin:10},{requireInteraction:true});
+});
+
+document.getElementById('btn-schedule').addEventListener('click',()=>{
+  const timeInput = document.getElementById('pause-time').value;
+  const duration = parseInt(document.getElementById('pause-duration').value||'10',10);
+  if(!timeInput){ alert('Escolha um horário para agendar a pausa (hora local).'); return; }
+  const [hh,mm] = timeInput.split(':').map(Number);
+  const now = new Date();
+  const target = new Date(now.getFullYear(),now.getMonth(),now.getDate(),hh,mm,0,0);
+  if(target.getTime() <= now.getTime()) target.setDate(target.getDate()+1);
+  const oneMinBefore = new Date(target.getTime()-60000);
+  const msUntil = oneMinBefore.getTime()-Date.now();
+  const fmt = oneMinBefore.toLocaleString();
+  alert(`Notificação programada para: ${fmt} (1 minuto antes).`);
+  if(msUntil<=0){ showMockNotification({id:'schedule-immediate',title:`Pausa agendada`,message:`Pausa iniciando em breve — duração: ${duration}min`,durationMin:duration},{requireInteraction:true}); }
+  else{ setTimeout(()=>{ showMockNotification({id:'schedule-'+target.getTime(),title:`Pausa agendada`,message:`Sua pausa começa em 1 minuto — duração: ${duration}min`,durationMin:duration},{requireInteraction:true}); },msUntil); }
+});
+
+document.getElementById('btn-fast').addEventListener('click',()=>{
+  alert('Demo rápido: a notificação mock será exibida em 3 segundos.');
+  setTimeout(()=>{ showMockNotification({id:'fast-demo',title:'Pausa 10',message:'Hora da Pausa 10! Duração: 10min',durationMin:10},{requireInteraction:true}); },3000);
+});
+</script>
+</body>
+</html>
